@@ -128,14 +128,35 @@ for i=1:n
         Is = superpixel_image;
 
         spoints = detectSURFFeatures(mat2gray(Is));
-        spoints = spoints.selectStrongest(1);
+                
+        [features, valid_points] = extractFeatures(Is,spoints,'Method','SURF','SurfSize',128);
 
-        [features, valid_points] = extractFeatures(Is,spoints,'Method','SURF','SurfSize',128); %FeatureSize can be 64 or 128
-        if isempty(features)
-            features = zeros(1,128); %If no points of interests are found in the superpixel, create empty array.      
-        end
-
-        surfFeatures(superPixelIndex,:) = features;
+        % Show the sub-image pinpointing the extracted SURF features.
+        points = valid_points.selectStrongest(1);
+        [szx, szy] = size(points);
+        if (szx == 0 || szy == 0)
+            surfFeatures(superPixelIndex,1) = 0;
+            surfFeatures(superPixelIndex,2) = 0;
+            surfFeatures(superPixelIndex,3) = 0;
+            surfFeatures(superPixelIndex,4) = 0;
+        else
+            
+            surfFeatures(superPixelIndex,1) = points.Scale;
+            surfFeatures(superPixelIndex,2) = points.Metric;
+            surfFeatures(superPixelIndex,3) = points.Orientation;
+            surfFeatures(superPixelIndex,4) = points.SignOfLaplacian;
+        end        
+                          
+        
+%         
+%         spoints = spoints.selectStrongest(1);
+% 
+%         [features, valid_points] = extractFeatures(Is,spoints,'Method','SURF','SurfSize',128); %FeatureSize can be 64 or 128
+%         if isempty(features)
+%             features = zeros(1,128); %If no points of interests are found in the superpixel, create empty array.      
+%         end
+% 
+%         surfFeatures(superPixelIndex,:) = features;
         
         
         y_ = size(Is(:,1));
@@ -253,14 +274,35 @@ for i=1:n
         Is = superpixel_image;
 
         spoints = detectSURFFeatures(mat2gray(Is));
-        spoints = spoints.selectStrongest(1);
+        
+         [features, valid_points] = extractFeatures(Is,spoints,'Method','SURF','SurfSize',128);
 
-        [features, valid_points] = extractFeatures(Is,spoints,'Method','SURF','SurfSize',128); %FeatureSize can be 64 or 128
-        if isempty(features)
-            features = zeros(1,128); %If no points of interests are found in the superpixel, create empty array.      
-        end
-
-        surfFeatures(superPixelIndex,:) = features;
+        % Show the sub-image pinpointing the extracted SURF features.
+        points = valid_points.selectStrongest(1);
+        [szx, szy] = size(points);
+        if (szx == 0 || szy == 0)
+            surfFeatures(superPixelIndex,1) = 0;
+            surfFeatures(superPixelIndex,2) = 0;
+            surfFeatures(superPixelIndex,3) = 0;
+            surfFeatures(superPixelIndex,4) = 0;
+        else
+            
+            surfFeatures(superPixelIndex,1) = points.Scale;
+            surfFeatures(superPixelIndex,2) = points.Metric;
+            surfFeatures(superPixelIndex,3) = points.Orientation;
+            surfFeatures(superPixelIndex,4) = points.SignOfLaplacian;
+        end          
+        
+        
+        
+%         spoints = spoints.selectStrongest(1);
+% 
+%         [features, valid_points] = extractFeatures(Is,spoints,'Method','SURF','SurfSize',128); %FeatureSize can be 64 or 128
+%         if isempty(features)
+%             features = zeros(1,128); %If no points of interests are found in the superpixel, create empty array.      
+%         end
+% 
+%         surfFeatures(superPixelIndex,:) = features;
         
     end
     
