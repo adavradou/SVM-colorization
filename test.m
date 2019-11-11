@@ -299,6 +299,13 @@ img5(:,:,3)=b;
     figure
     imshow(lab2rgb(final))
     title(sprintf('Colorized image',color_bins))    
+    
+    
+    %Metrics. final: Image whose quality is to be measured. 
+    %previous: Reference image against which quality is measured.
+    psnr(final, previous) %Higher is better
+    mse(final, previous) %Lower is better
+    ssim(final, previous) %Higher is better [0 1]
 
 
 end
