@@ -20,61 +20,55 @@ n=length(selectedFiles); %Number of selected images.
 
 for i=1:n 
         
-    image = imread(selectedFiles{i});
+    training_image = imread(selectedFiles{i});
     
     %Image representation in the Lab color space.
-    image_lab = rgb2lab(image); %L*a*b
+    training_image_lab = rgb2lab(training_image); %L*a*b
     
     %Discretization of the color space.     
 
     %https://www.mathworks.com/help/images/color-based-segmentation-using-k-means-clustering.html
-    ab = image_lab(:,:,2:3);
+    ab = training_image_lab(:,:,2:3);
     ab = im2single(ab);
     color_bins = 32;
     %Repeat the clustering 3 times to avoid local minima
     [pixel_labels,centers] = imsegkmeans(ab,color_bins,'NumAttempts',3);
    
-    pl_ind=1;
-    img2=image_lab;
+%     pl_ind=1;
+    [pixel_labels_rgb,centers_rgb] = imsegkmeans(training_image,32);
+    training_image_colorbins = label2rgb(pixel_labels_rgb,im2double(centers_rgb));
+    imshow(training_image_colorbins)
+    title('Color Quantized Image')
+
+    L_training=training_image_lab(:,:,1);
+    a_training=training_image_lab(:,:,2);
+    b_training=training_image_lab(:,:,3);
     
-    L=image_lab(:,:,1);
-    a=img2(:,:,1);
-    b=img2(:,:,1);
-    
-    for idx = 1:numel(img2(:,:,2))
-         a(idx)=centers(pixel_labels(idx),1);
-         pl_ind=pl_ind+1;
+    for idx = 1:numel(training_image_lab(:,:,2))
+         a_training(idx)=centers(pixel_labels(idx),1);
+%          pl_ind=pl_ind+1;
     end
-    for idx = 1:numel(img2(:,:,3))
-         b(idx)=centers(pixel_labels(idx),2);
-         pl_ind=pl_ind+1;
-    end
-    
-        
-    previous(:,:,1) = L;
-    previous(:,:,2) = a;
-    previous(:,:,3) = b;
-    
-    figure
-    imshow(lab2rgb(previous))
-    title(sprintf('Original image before colorization',color_bins))  
-    
-    
+    for idx = 1:numel(training_image_lab(:,:,3))
+         b_training(idx)=centers(pixel_labels(idx),2);
+%          pl_ind=pl_ind+1;
+    end    
     
 %--------------------------------------------------------------------------    
 
-    image_gray = rgb2gray(image);
+
+
+    training_image_gray = rgb2gray(training_image);
     
     %N is the actual number of superpixels that were computed.
     %L is a label matrix of type double. L is a labeled image: 
     %each pixel has the value corresponding to the ID of a superpixel. 
     %These labels start at 1 and are consecutive.
-    [LabelsOfSuperpixels,NumOfSuperpixels] = superpixels(image_gray,30); 
+    [LabelsOfSuperpixels,NumOfSuperpixels] = superpixels(training_image_gray,30); 
     
 %     %Visualize the superpixels.
 %     figure
 %     BW = boundarymask(LabelsOfSuperpixels);
-%     imshow(imoverlay(image_gray,BW,'cyan'),'InitialMagnification',67);  
+%     imshow(imoverlay(training_image_gray,BW,'cyan'),'InitialMagnification',67);  
    
 
 	%Gabor Features parameters
@@ -83,7 +77,7 @@ for i=1:n
     deltaTheta = 45;
 	orientation = 0:deltaTheta:(180-deltaTheta); %vector
     g = gabor(wavelength,orientation);
-    gabormag = imgaborfilt(image_gray,g);    
+    gabormag = imgaborfilt(training_image_gray,g);    
 
     %Extract Gabor Features for ALL superpixels. 
 	K = size(gabormag,3); %K=20
@@ -99,13 +93,13 @@ for i=1:n
     for superPixelIndex = 1:NumOfSuperpixels  
         
         %Create a mask to keep only the superpixel.
-        [m,n] = size(image_gray);
+        [m,n] = size(training_image_gray);
         mask = zeros(m,n);
                 
         for iii = 1:m
             for j = 1:n
                 if LabelsOfSuperpixels(iii,j)==superPixelIndex
-                    mask(iii,j) = image_gray(iii,j);
+                    mask(iii,j) = training_image_gray(iii,j);
                 end
             end
         end        
@@ -129,41 +123,42 @@ for i=1:n
 
         spoints = detectSURFFeatures(mat2gray(Is));
                 
-        [features, valid_points] = extractFeatures(Is,spoints,'Method','SURF','SurfSize',128);
-
-        % Show the sub-image pinpointing the extracted SURF features.
-        points = valid_points.selectStrongest(1);
-        [szx, szy] = size(points);
-        if (szx == 0 || szy == 0)
-            surfFeatures(superPixelIndex,1) = 0;
-            surfFeatures(superPixelIndex,2) = 0;
-            surfFeatures(superPixelIndex,3) = 0;
-            surfFeatures(superPixelIndex,4) = 0;
-        else
-            
-            surfFeatures(superPixelIndex,1) = points.Scale;
-            surfFeatures(superPixelIndex,2) = points.Metric;
-            surfFeatures(superPixelIndex,3) = points.Orientation;
-            surfFeatures(superPixelIndex,4) = points.SignOfLaplacian;
-        end        
-                          
+%         [features, valid_points] = extractFeatures(Is,spoints,'Method','SURF','SurfSize',128);
+% 
+%         % Show the sub-image pinpointing the extracted SURF features.
+%         points = valid_points.selectStrongest(1);
+%         [szx, szy] = size(points);
+%         if (szx == 0 || szy == 0)
+%             surfFeatures(superPixelIndex,1) = 0;
+%             surfFeatures(superPixelIndex,2) = 0;
+%             surfFeatures(superPixelIndex,3) = 0;
+%             surfFeatures(superPixelIndex,4) = 0;
+%         else
+%             
+%             surfFeatures(superPixelIndex,1) = points.Scale;
+%             surfFeatures(superPixelIndex,2) = points.Metric;
+%             surfFeatures(superPixelIndex,3) = points.Orientation;
+%             surfFeatures(superPixelIndex,4) = points.SignOfLaplacian;
+%         end        
+%                           
         
-%         
-%         spoints = spoints.selectStrongest(1);
-% 
-%         [features, valid_points] = extractFeatures(Is,spoints,'Method','SURF','SurfSize',128); %FeatureSize can be 64 or 128
-%         if isempty(features)
-%             features = zeros(1,128); %If no points of interests are found in the superpixel, create empty array.      
-%         end
-% 
-%         surfFeatures(superPixelIndex,:) = features;
+        
+        spoints = spoints.selectStrongest(1);
+
+        [features, valid_points] = extractFeatures(Is,spoints,'Method','SURF','SurfSize',128); %FeatureSize can be 64 or 128
+        if isempty(features)
+            features = zeros(1,128); %If no points of interests are found in the superpixel, create empty array.      
+        end
+
+        surfFeatures(superPixelIndex,:) = features;
         
         
         y_ = size(Is(:,1));
         x_ = size(Is(1,:));
         dominant = zeros(color_bins, 1); 
         [size_y, size_x] = size(Is);
-        sample_ = (size_x*size_y)*0.6;
+
+        sample_ = (size_x*size_y)*1; %(size_x*size_y)*0.6;
         for j = 1:sample_ %REALLY CONFUSING WITH THE x and y.... careful.
             sample_pixels(superPixelIndex,j,2) = randi([1 x_(2)],1,1) + x_min-1;
             sample_pixels(superPixelIndex,j,1) = randi([1 y_(1)],1,1) + y_min-1;
@@ -184,7 +179,7 @@ for i=1:n
     
 
     tTree = templateTree('surrogate','on');
-    tEnsemble = templateEnsemble('GentleBoost',28,tTree);
+    tEnsemble = templateEnsemble('GentleBoost',color_bins,tTree);
 
     % rng(1); % For reproducibility 
     % model = fitcecoc(trainX,trainY,'Learners',t,'ObservationsIn','columns');
@@ -203,24 +198,25 @@ for i=1:n
     % load('model.mat')
     % predictedLabels = predict(model,poi_array);
 
-
-    L=image_lab(:,:,1);
-    a=image_lab(:,:,2);
-    b=image_lab(:,:,3);
-
-    [Labels1,N1] = superpixels(image,30); 
+    testing_image = imread('images6.jpg');
     
+    %Image representation in the Lab color space.
+    testing_image_lab = rgb2lab(testing_image); %L*a*b
     
-    img5(:,:,1) = L;
-    img5(:,:,2) = a;
-    img5(:,:,3) = b;
+    testing_image_gray = rgb2gray(testing_image);
 
 
+    L_testing=testing_image_lab(:,:,1);
+    a_testing=testing_image_lab(:,:,2);
+    b_testing=testing_image_lab(:,:,3);
+
+    [Labels1,N1] = superpixels(testing_image,30); 
+    
     
 %     %Visualize the superpixels.
 %     figure
 %     BW = boundarymask(Labels1);
-%     imshow(imoverlay(image_gray,BW,'cyan'),'InitialMagnification',67);  
+%     imshow(imoverlay(testing_image_gray,BW,'cyan'),'InitialMagnification',67);  
    
 
 	%Gabor Features parameters
@@ -229,7 +225,7 @@ for i=1:n
     deltaTheta = 45;
 	orientation = 0:deltaTheta:(180-deltaTheta); %vector
     g = gabor(wavelength,orientation);
-    gabormag = imgaborfilt(image_gray,g);    
+    gabormag = imgaborfilt(testing_image_gray,g);    
 
     %Extract Gabor Features for ALL superpixels. 
 	K = size(gabormag,3); %K=20
@@ -245,13 +241,13 @@ for i=1:n
     for superPixelIndex = 1:N1  
         
         %Create a mask to keep only the superpixel.
-        [m,n] = size(image_gray);
+        [m,n] = size(testing_image_gray);
         mask = zeros(m,n);
                 
         for iii = 1:m
             for j = 1:n
                 if LabelsOfSuperpixels(iii,j)==superPixelIndex
-                    mask(iii,j) = image_gray(iii,j);
+                    mask(iii,j) = testing_image_gray(iii,j);
                 end
             end
         end        
@@ -275,34 +271,34 @@ for i=1:n
 
         spoints = detectSURFFeatures(mat2gray(Is));
         
-         [features, valid_points] = extractFeatures(Is,spoints,'Method','SURF','SurfSize',128);
+%          [features, valid_points] = extractFeatures(Is,spoints,'Method','SURF','SurfSize',128);
 
-        % Show the sub-image pinpointing the extracted SURF features.
-        points = valid_points.selectStrongest(1);
-        [szx, szy] = size(points);
-        if (szx == 0 || szy == 0)
-            surfFeatures(superPixelIndex,1) = 0;
-            surfFeatures(superPixelIndex,2) = 0;
-            surfFeatures(superPixelIndex,3) = 0;
-            surfFeatures(superPixelIndex,4) = 0;
-        else
-            
-            surfFeatures(superPixelIndex,1) = points.Scale;
-            surfFeatures(superPixelIndex,2) = points.Metric;
-            surfFeatures(superPixelIndex,3) = points.Orientation;
-            surfFeatures(superPixelIndex,4) = points.SignOfLaplacian;
-        end          
+%         % Show the sub-image pinpointing the extracted SURF features.
+%         points = valid_points.selectStrongest(1);
+%         [szx, szy] = size(points);
+%         if (szx == 0 || szy == 0)
+%             surfFeatures(superPixelIndex,1) = 0;
+%             surfFeatures(superPixelIndex,2) = 0;
+%             surfFeatures(superPixelIndex,3) = 0;
+%             surfFeatures(superPixelIndex,4) = 0;
+%         else
+%             
+%             surfFeatures(superPixelIndex,1) = points.Scale;
+%             surfFeatures(superPixelIndex,2) = points.Metric;
+%             surfFeatures(superPixelIndex,3) = points.Orientation;
+%             surfFeatures(superPixelIndex,4) = points.SignOfLaplacian;
+%         end          
         
         
         
-%         spoints = spoints.selectStrongest(1);
-% 
-%         [features, valid_points] = extractFeatures(Is,spoints,'Method','SURF','SurfSize',128); %FeatureSize can be 64 or 128
-%         if isempty(features)
-%             features = zeros(1,128); %If no points of interests are found in the superpixel, create empty array.      
-%         end
-% 
-%         surfFeatures(superPixelIndex,:) = features;
+        spoints = spoints.selectStrongest(1);
+
+        [features, valid_points] = extractFeatures(Is,spoints,'Method','SURF','SurfSize',128); %FeatureSize can be 64 or 128
+        if isempty(features)
+            features = zeros(1,128); %If no points of interests are found in the superpixel, create empty array.      
+        end
+
+        surfFeatures(superPixelIndex,:) = features;
         
     end
     
@@ -315,7 +311,7 @@ for i=1:n
     
     [testLabels,testScores] = predict(model,svmInput_test);
 
-    [m,n] = size(img5(:,:,3));
+    [m,n] = size(testing_image_lab(:,:,3));
     pixel_labels_test = zeros(m,n);
     for superPixelIndex = 1:N1                   
         for iii = 1:m
@@ -327,16 +323,15 @@ for i=1:n
         end            
     end
     
-    img2=image_lab;
 
-    L=image_lab(:,:,1);
-    a=img2(:,:,2);
-    b=img2(:,:,3);
+    L=testing_image_lab(:,:,1);
+    a=testing_image_lab(:,:,2);
+    b=testing_image_lab(:,:,3);
     
-    for idx = 1:numel(img2(:,:,2))
+    for idx = 1:numel(testing_image_lab(:,:,2))
          a(idx)=centers(pixel_labels_test(idx),1);
     end
-    for idx = 1:numel(img2(:,:,3))
+    for idx = 1:numel(testing_image_lab(:,:,3))
          b(idx)=centers(pixel_labels_test(idx),2);
     end    
     
@@ -350,10 +345,10 @@ for i=1:n
     title(sprintf('Colorized image',color_bins))  
     
     %Metrics. final: Image whose quality is to be measured. 
-    %previous: Reference image against which quality is measured.
-    psnr(final, previous) %Higher is better
-    mse(final, previous) %Lower is better
-    ssim(final, previous) %Higher is better [0 1]
+    %training_image_colorbins: Reference image against which quality is measured.
+    psnr(lab2rgb(final), im2double(training_image_colorbins)) %Higher is better
+    mse(lab2rgb(final), im2double(training_image_colorbins)) %Lower is better
+    ssim(lab2rgb(final), im2double(training_image_colorbins)) %Higher is better [0 1]
         
     
 end

@@ -1,6 +1,6 @@
-clc 
-clear 
-close all; 
+% clc 
+% clear 
+% close all; 
 warning off
 
 
@@ -166,7 +166,7 @@ trainY = color_label;
 
 
 tTree = templateTree('surrogate','on');
-tEnsemble = templateEnsemble('GentleBoost',28,tTree);
+tEnsemble = templateEnsemble('GentleBoost',color_bins,tTree);
 
 
 
@@ -174,7 +174,7 @@ tEnsemble = templateEnsemble('GentleBoost',28,tTree);
 % model = fitcecoc(trainX,trainY,'Learners',t,'ObservationsIn','columns');
 
 % options = statset('UseParallel',true);
-% % Mdl = fitcecoc(trainX,trainY,'Coding','onevsall','Learners',tEnsemble,...
+% model = fitcecoc(trainX,trainY,'Coding','onevsall','Learners',tEnsemble,...
 % %                 'Prior','uniform','NumBins',50,'Options',options);
 % 
 model = fitcecoc(trainX,trainY,'Coding','onevsall','Learners',tEnsemble,'ObservationsIn','columns');
