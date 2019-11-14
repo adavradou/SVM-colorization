@@ -1,4 +1,4 @@
-function [spoints_all, poi_all, images_info, superPixelBoxes] = features_extraction(selectedFiles_r, n, num_of_superpixels)
+function [images_info, Labels] = features_extraction(selectedFiles_r, n, num_of_superpixels)
 
     images_info = [];
 
